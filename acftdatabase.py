@@ -8,6 +8,7 @@ Objective: Create a SQLite3 database for ACFT scores
 '''
 
 import sqlite3, re, csv, os
+from os import path
 
 class DatabaseManager:
     def __init__(self, db):
@@ -99,13 +100,14 @@ def init_database_connection():
     main_directory = os.getcwd()
     events = ["deadlift", "plank", "powerthrow", "releasePU", "run", "sdc"]
 
-    db_string = os.path.normcase(os.path.join(main_directory, "Scoring/acftdatabase.db"))
+    # db_string = os.path.normcase(os.path.join(main_directory, "Scoring/acftdatabase.db"))
     #print(db_string)
+    db_string = path.abspath(path.join(path.dirname(__file__), 'acftdatabase.db')) # path to included database
     dbmgr = DatabaseManager(db_string) # Implicitly creates db file if not found.
     
     # check if the database is empty
     empty_check = dbmgr.is_empty()
-    if empty_check:
+    if empty_check: # might need to change this, but if I'm including the database in the package...
         fill_empty_database(os.path.join(main_directory, os.path.normcase("Scoring")), events, dbmgr)
 
     return dbmgr

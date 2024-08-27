@@ -114,7 +114,8 @@ class windows(tk.Tk):
                         wannasave = messagebox.askyesno(title="Information", message="Invalid Filename", detail="You didn't give a valid file name. Do you want to save it to a file?")
                         continue # restart loop with wannasave either true or false based on the yesno box
             
-            self.destroy()
+            if close == True: # only close if wanted to close
+                self.destroy()
 
         # open database
         def open_roster(decision):
@@ -733,7 +734,9 @@ def validate_numbers(action, index, input, min, max): # given input, want only m
         return True
     else:
         return False
-    
-if __name__ == "__main__": # initialize the GUI
+def main(): # initialize the GUI
     mainWindow = windows()
     mainWindow.mainloop()
+
+if __name__ == "__main__":
+    main()
