@@ -51,7 +51,8 @@ def get_scoring_data(exercise, directory):
     return big_data
 
 def pull_exercise(input): # input should be exercise_csv.csv, just remove _csv.csv
-    full_name = re.compile('(\w+)_csv.csv')
+    csv_name = r"(\w+)_csv.csv"
+    full_name = re.compile(csv_name)
 
     m = full_name.search(input)
 

@@ -758,6 +758,6 @@ def validate_numbers(action, index, input, min, max): # given input, want only m
     else:
         return False
     
-if __name__ == "__main__":
-    testObj = windows()
-    testObj.mainloop()
+if __name__ == "__main__": # initialize the GUI
+    mainWindow = windows()
+    mainWindow.mainloop()

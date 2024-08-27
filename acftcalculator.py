@@ -249,10 +249,12 @@ def create_soldier_profile(raw, dbmgr): # raw = ['Name', 'Age', 'Sex', 'Deadlift
     
     return csb
 
+# the following main function is for testing out the calculator and database, not meant to be used to initiate the program.
+## INITIATE THE PROGRAM FROM acftcalc_gui.py ##
 def main():
     dbmgr = get_database()
     Amir_profile = ["Amir", "23", "Male", 340, "-- or 1=1", 41, "1:25", "-- or 1=1", "14:05"] # ['Name', 'Age', 'Sex', 'Deadlift', 'Powerthrow', 'ReleasePU', 'SDC', 'Plank', 'Run']
-    csb = create_soldier_profile(Amir_profile)
+    csb = create_soldier_profile(Amir_profile, dbmgr)
 
     calculate_scores(csb, dbmgr)
     csb.print_soldier()
