@@ -83,7 +83,7 @@ def db_to_csb(active_roster, soldier_db, scoring_db):
     # for each line, make a csb with the information
     get_records_line = "SELECT name, age, sex, deadlift_out, powerthrow_out, releasePU_out, sdc_out, plank_out, run_out FROM roster"
     for row in soldier_db.query(get_records_line):
-        # row raw = ['Name', 'Age', 'Sex', 'Deadlift', 'Powerthrow', 'ReleasePU', 'SDC', 'Plank', 'Run']
+                                        # row raw = ['Name', 'Age', 'Sex', 'Deadlift', 'Powerthrow', 'ReleasePU', 'SDC', 'Plank', 'Run']
         csb = acftcalculator.create_soldier_profile([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]], scoring_db)
         active_roster.add_soldier(csb, csb.name)
 

@@ -63,6 +63,7 @@ class windows(tk.Tk):
 
         self.objmgr = objmgr.Roster()
         self.given_password = ""
+        self.oldsave_file = []
 
         self.frames = {} # frame dictionary
 
@@ -73,7 +74,16 @@ class windows(tk.Tk):
 
         self.dbmgr = acftcalc.get_database() # get dbmgr
 
-        self.protocol("WM_DELETE_WINDOW", lambda: save_roster(True))
+        self.protocol("WM_DELETE_WINDOW", lambda: check_save())
+
+        def check_save():
+            wannasave = messagebox.askyesnocancel(title="Information", message="Unsaved Data", detail="Do you want to save this file?")
+            if wannasave == True:
+                save_roster(True)
+            elif wannasave == False:
+                encrypt_loaded()
+                self.destroy()
+            # else do nothing
 
         # save database
         def save_roster(close=False):
@@ -91,31 +101,49 @@ class windows(tk.Tk):
 
                             rosterdatabase.csb_to_db(self.objmgr, roster_db)
 
-                            encrypt_choice = messagebox.askyesno(title=None, message="Do you wish to encrypt this file?")
-                            if encrypt_choice == True:
-                                if acftcrypt.check_encrypt(roster_db) == 1:
-                                    acftcrypt.encrypt_data(roster_db)
-                                else:
-                                    password_window = PasswordBox(True, self)
-                                    password_window.wait_window()
-                                    
-                                    acftcrypt.get_hash_n_salt(self.given_password, roster_db)
-                                    acftcrypt.encrypt_data(roster_db)
-                            else: # double check to make sure the file doesn't already have an encryption set up. Delete if so
-                                if acftcrypt.check_encrypt(roster_db) == 1:
-                                    acftcrypt.remove_encryption_info(roster_db)
-
-                            rosterdatabase.close_database_connection(roster_db)
                             break # saving is done, exit loop
                         except:
                             messagebox.showerror(title="Error", message="Invalid Database", detail="There was something wrong with saving your database.\nPlease check your entries and try again..")
                             continue # start the loop over because of error
                     else:
                         wannasave = messagebox.askyesno(title="Information", message="Invalid Filename", detail="You didn't give a valid file name. Do you want to save it to a file?")
-                        continue # restart loop with wannasave either true or false based on the yesno box
+                        # need to re-encrypt db if exists, because the db actually changes mid-session. should this be changed?
+                        if wannasave == False:
+                            # need to check for if opened from oldsave_file, then encrypt it
+                            if len(self.oldsave_file) > 0:
+                                encrypt_loaded()
+
+                            break
+                        else:
+                            continue # restart loop with wannasave either true or false based on the yesno box
+
+            if close == False:
+                close = messagebox.askyesno(title="Information", message="Close Application", detail="You saved your database. Do you want to close the application?")
             
             if close == True: # only close if wanted to close
+                encrypt_choice = messagebox.askyesno(title=None, message="Do you wish to encrypt this file?")
+                if encrypt_choice == True:
+                    if acftcrypt.check_encrypt(roster_db) == 1:
+                        acftcrypt.encrypt_data(roster_db)
+                    else:
+                        password_window = PasswordBox(True, self)
+                        password_window.wait_window()
+                                    
+                        acftcrypt.get_hash_n_salt(self.given_password, roster_db)
+                        acftcrypt.encrypt_data(roster_db)
+                else: # double check to make sure the file doesn't already have an encryption set up. Delete if so
+                    if acftcrypt.check_encrypt(roster_db) == 1:
+                        acftcrypt.remove_encryption_info(roster_db)
+
+                rosterdatabase.close_database_connection(roster_db)
                 self.destroy()
+        
+        def encrypt_loaded():
+            for i in self.oldsave_file:
+                roster_db = rosterdatabase.init_database_connection(i)
+                                    
+                if acftcrypt.check_encrypt(roster_db) == 1:
+                    acftcrypt.encrypt_data(roster_db)
 
         # open database
         def open_roster(decision):
@@ -123,9 +151,10 @@ class windows(tk.Tk):
                 self.objmgr = None
                 self.objmgr = objmgr.Roster()
 
-
             newopen_file = filedialog.askopenfilename(parent=self.container, title="Open Roster...", initialdir=os.getcwd(), filetypes=[("Database files", ".db")])
             if type(newopen_file) == str and newopen_file != "":
+                self.oldsave_file.append(newopen_file)
+
                 try:
                     roster_db = rosterdatabase.init_database_connection(newopen_file)
                     if acftcrypt.check_encrypt(roster_db) == 1:

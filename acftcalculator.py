@@ -172,36 +172,38 @@ def catch_bad_input(input, cast, flagcatcher): # IE catch_bad_input(raw[0], 1)
     try:
         if cast == 1:
             maybe_flag = "Bad Integer (Check Age, Deadlift, Push-Up Entries)"
-            input = int(input)
+            input = float(input) # i have to change the string float to a float and then return int
+            return int(input)
         elif cast == 2:
             maybe_flag = "Bad Float (Check Powerthrow Entry)"
-            input = float(input)
+            return float(input)
         elif cast == 3:
             maybe_flag = "Bad Time (Check SDC, Plank, 2mi. Run Entries)"
             if type(input) == str:
-                input = time_to_float(input)
-        else: # Sanitizing strings? No = ; INSERT DROP UNION
+                return time_to_float(input)
+        else: # Sanitizing strings. No = ; INSERT DROP UNION
             if '=' in input or ';' in input or 'INSERT' in input or 'DROP' in input or 'UNION' in input:
                 maybe_flag = "Bad String (Check Name)"
-                input = ""
+                return "Invalid Input"
+            else:
+                return input
     except:
         #print(f"ERROR: Bad Input: {input}")
         flagcatcher.flagged = True
         flagcatcher.flags.append(maybe_flag) if maybe_flag not in flagcatcher.flags else None
         return None
-    else:
-        return input
 
 def create_soldier_profile(raw, dbmgr): # raw = ['Name', 'Age', 'Sex', 'Deadlift', 'Powerthrow', 'ReleasePU', 'SDC', 'Plank', 'Run'] from a soldier CSV
 
     flagger = FlagCatcher()
-    
+
+    name = catch_bad_input(raw[0], 4, flagger) or "Default Name"
     age = catch_bad_input(raw[1], 1, flagger) or 17
-    sex = ((catch_bad_input(raw[2], 4, flagger)).lower()).title() or "Male"
+    sex = raw[2]
 
     highlow = HighsLows(age, sex)
 
-    name = catch_bad_input(raw[0], 4, flagger) or "Default Name"
+    # print(type(raw[3])) # print is troubleshooting god
     deadlift = catch_bad_input(raw[3], 1, flagger) or 140
     '''if deadlift > highlow.deadlift_high: 
         deadlift = highlow.deadlift_high 
