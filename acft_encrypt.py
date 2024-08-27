@@ -101,3 +101,7 @@ def decrypt_data(roster_db, given_password):
 def get_fernet_suite(given_hash):
     fernet_key = base64.urlsafe_b64encode((given_hash[30:62]).encode())
     return Fernet(fernet_key)
+
+def remove_encryption_info(roster_db):
+    roster_db.query("DROP TABLE IF EXISTS encryption")
+    roster_db.query("CREATE TABLE IF NOT EXISTS encryption(encrypted INTEGER, hash TEXT, salt BLOB)")

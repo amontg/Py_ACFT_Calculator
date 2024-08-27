@@ -80,40 +80,44 @@ class windows(tk.Tk):
 
         # save database
         def save_roster(close=False):
-            if len(self.objmgr.soldier_list()) > 0:
-                newsave_file = filedialog.asksaveasfilename(parent=self.container, title="Save Roster...", initialdir=os.getcwd(), confirmoverwrite=tk.TRUE, defaultextension=".db", filetypes=[("Database files", ".db")])
-                if type(newsave_file) == str and newsave_file != "":
-                    #try:
-                        roster_db = rosterdatabase.init_database_connection(newsave_file)
+            if len(self.objmgr.soldier_list()) > 0: # if i have soldiers in my database, go thru saving procedure
 
-                        rosterdatabase.csb_to_db(self.objmgr, roster_db)
+                # ask for filename to save file as, make a loop until they save into file name or deny saving
+                wannasave = True
+                while (wannasave == True): # if wannasave remains true, loop back
+                    newsave_file = filedialog.asksaveasfilename(parent=self.container, title="Save Roster...", initialdir=os.getcwd(), confirmoverwrite=tk.TRUE, defaultextension=".db", filetypes=[("Database files", ".db")])
+                    
+                    # if given an actual file/name to save to 
+                    if type(newsave_file) == str and newsave_file != "":
+                        try:
+                            roster_db = rosterdatabase.init_database_connection(newsave_file)
 
-                        encrypt_choice = messagebox.askyesno(title=None, message="Do you wish to encrypt this file?")
-                        if encrypt_choice == True:
-                            if acftcrypt.check_encrypt(roster_db) == 1:
-                                acftcrypt.encrypt_data(roster_db)
-                            else:
-                                password_window = PasswordBox(True, self)
-                                password_window.wait_window()
-                                
-                                acftcrypt.get_hash_n_salt(self.given_password, roster_db)
-                                acftcrypt.encrypt_data(roster_db)
+                            rosterdatabase.csb_to_db(self.objmgr, roster_db)
 
-                        rosterdatabase.close_database_connection(roster_db)
-                    #except:
-                    #    messagebox.showerror(title="Error", message="Invalid Database", detail="There was something wrong with saving your database.\nPlease check your entries and try again..")
-                else:
-                    messagebox.showinfo(title="Information", message="Invalid Filename", detail="You didn't give a valid file name.")
+                            encrypt_choice = messagebox.askyesno(title=None, message="Do you wish to encrypt this file?")
+                            if encrypt_choice == True:
+                                if acftcrypt.check_encrypt(roster_db) == 1:
+                                    acftcrypt.encrypt_data(roster_db)
+                                else:
+                                    password_window = PasswordBox(True, self)
+                                    password_window.wait_window()
+                                    
+                                    acftcrypt.get_hash_n_salt(self.given_password, roster_db)
+                                    acftcrypt.encrypt_data(roster_db)
+                            else: # double check to make sure the file doesn't already have an encryption set up. Delete if so
+                                if acftcrypt.check_encrypt(roster_db) == 1:
+                                    acftcrypt.remove_encryption_info(roster_db)
+
+                            rosterdatabase.close_database_connection(roster_db)
+                            break # saving is done, exit loop
+                        except:
+                            messagebox.showerror(title="Error", message="Invalid Database", detail="There was something wrong with saving your database.\nPlease check your entries and try again..")
+                            continue # start the loop over because of error
+                    else:
+                        wannasave = messagebox.askyesno(title="Information", message="Invalid Filename", detail="You didn't give a valid file name. Do you want to save it to a file?")
+                        continue # restart loop with wannasave either true or false based on the yesno box
             
-            if close == True:
-                if len(self.objmgr.soldier_list()) > 0:
-                    check = messagebox.askyesno(message="There are unsaved soldiers. Are you sure you want to quit?")
-                    if check == True:
-                        if acftcrypt.check_encrypt(roster_db) == 1:
-                            acftcrypt.encrypt_data(roster_db)
-                        self.destroy()
-                else:
-                    self.destroy()
+            self.destroy()
 
         # open database
         def open_roster(decision):
@@ -144,7 +148,7 @@ class windows(tk.Tk):
                 #except:
                 #    messagebox.showerror(title="Invalid File", message="You chose an invalid file.", detail="Please select a different file.")
             else:
-                messagebox.showinfo(title="Information", message="Bad File", detail="You didn't select a valid file.")
+                messagebox.showinfo(title="Information", message="Invalid File", detail="You didn't select a valid file.")
 
         def clear_table():
             self.objmgr = None
