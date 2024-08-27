@@ -54,12 +54,9 @@ class windows(tk.Tk):
 
         self.minsize(0, 300)
         self.resizable(0, 0)
-        #self.grid_propagate(0)
-        #self.pack_propagate(0)
 
         self.container = tk.Frame(self, padx=5, pady=10) # frame and container
         self.container.grid(column=0, row=0, sticky="NSEW")
-        #container.pack(side="top", fill=tk.BOTH, expand=True) # place frame in root window
         
         self.container.grid_rowconfigure(0, weight=1) # location of container with grid manager
         self.container.grid_columnconfigure(0, weight=1)
@@ -171,18 +168,18 @@ class windows(tk.Tk):
         self['menu'] = self.menu_bar
 
         menu_options = tk.Menu(self.menu_bar)
-        self.menu_bar.add_cascade(menu=menu_options, label="Options") # Options
+        self.menu_bar.add_cascade(menu=menu_options, label="Options") # Options cascade in menu bar
 
         #clear_roster = tk.Menu(menu_options)
         menu_options.add_command(label="Clear Entries", command=lambda: clear_table())
         menu_options.add_command(label="Save", command=lambda: save_roster())
 
         menu_open = tk.Menu(menu_options)
-        menu_options.add_cascade(menu=menu_open, label="Open")
+        menu_options.add_cascade(menu=menu_open, label="Open") # Open options cascade in option cascade
         menu_open.add_command(label="... and add", command=lambda: open_roster("add"))
         menu_open.add_command(label="... new", command=lambda: open_roster("new"))
     
-    def refresh_enterstats(self):
+    def refresh_enterstats(self): # destroys the frame to enter information, then remakes it fresh. is there a better way to refresh a frame?
         if self.enterstats_frame is not None:
             self.enterstats_frame.destroy()
 
@@ -191,7 +188,7 @@ class windows(tk.Tk):
         frame = self.frames[EnterStats]
         frame.grid(column=0, row=0, sticky="NSEW")
 
-    def show_stats(self):
+    def show_stats(self): # destroys the frame to display stats, then remakes it with new data. 
         if self.viewstats_frame is not None:
             self.viewstats_frame.destroy()
         
@@ -201,7 +198,7 @@ class windows(tk.Tk):
         frame.grid(column=0, row=3, sticky="NSEW")
 
 class PasswordBox(tk.Toplevel):
-    def __init__(self, new, passback, *args, **kwargs):
+    def __init__(self, new, passback, *args, **kwargs): # init PassBox (self[none], new[T/F], passback[frame that wants the information])
         tk.Toplevel.__init__(self, *args, **kwargs)
         self.wm_title("Password")
     
@@ -211,29 +208,27 @@ class PasswordBox(tk.Toplevel):
         self.con_padx=5
         self.entry_width=15
 
-        self.container = tk.Frame(self, padx=5, pady=10) # frame and container
+        self.container = tk.Frame(self, padx=5, pady=10) # frame and container, top left
         self.container.grid(column=0, row=0, sticky="NSEW")
-        #container.pack(side="top", fill=tk.BOTH, expand=True) # place frame in root window
         
         self.container.grid_rowconfigure(0, weight=1) # location of container with grid manager
         self.container.grid_columnconfigure(0, weight=1)
 
         self.entry1_label = ttk.Label(self.container, text="Enter Password: ")
         self.entry1_label.grid(column=0, row=0, sticky="NSEW", padx=self.con_padx, pady=self.con_pady)
-        #self.entry1_var = tk.StringVar()
         self.entry1_entry = ttk.Entry(self.container, show="*", width=self.entry_width)
         self.entry1_entry.grid(column=1, row=0, sticky="NSEW", padx=self.con_padx, pady=self.con_pady)
 
-        if new:
-            self.entry2_label = ttk.Label(self.container, text="Re-enter: ")
+        if new: # if adding a new password (True/False), add in a verify password field
+            self.entry2_label = ttk.Label(self.container, text="Verify: ")
             self.entry2_label.grid(column=0, row=1, sticky="NSEW", padx=self.con_padx, pady=self.con_pady)
             self.entry2_entry = ttk.Entry(self.container, show="*", width=self.entry_width)
             self.entry2_entry.grid(column=1, row=1, sticky="NSEW", padx=self.con_padx, pady=self.con_pady)
 
-        def empty(entry):
+        def empty(entry): #func to clear an entry field
             entry.delete(0, "end")
 
-        def process_pass():
+        def process_pass(): # double check new passwords, send it back to parent frame if passed
             given_password = self.entry1_entry.get()
             if new:
                 verify_password = self.entry2_entry.get()
@@ -255,16 +250,11 @@ class EnterStats(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.columnconfigure(0, minsize=0)
-        #self.grid_propagate(0)
-        #self.pack_propagate(0)
-        #self.grid_configure(pady=10)
 
         self.label = ttk.Label(self, text="Enter Soldier ACFT Statistics")
-        #label.pack(padx=10, pady=10)
         self.label.grid(column=0, row=0, padx=10, pady=10)
         
-        self.sub_frame_widths = 300 # consistent frame widths WHY NOT WORKINGGG
-        #sub_frame_height = 50
+        self.sub_frame_widths = 300 # consistent frame widths, but I like letting it fill itself in if need be
         self.con_padx = 5
         self.con_pady = 5
 
@@ -274,24 +264,19 @@ class EnterStats(tk.Frame):
             borderwidth=2,
             relief='sunken',
             padding="5 10 5 10", # left top right bottom
-            #width=sub_frame_widths,
-            #height=sub_frame_height
         )
-        #personal_data.grid_columnconfigure(0, minsize=300)#; personal_data.grid_rowconfigure(3)
-        #personal_data.pack(fill=tk.NONE, expand=1, padx=con_padx, pady=con_pady)
         self.personal_data.grid(column=0, row=1, sticky="nsew")
-        #personal_data.grid_propagate(0) # widgets inside don't grow
+        #personal_data.grid_propagate(0) # widgets inside don't grow, want to let them grow to fit parent frame
 
         self.name_label = ttk.Label(self.personal_data, text="Name (Last, First MI)") # name label
         self.name_label.grid(column=0, row=0, padx=self.con_padx, pady=self.con_pady)
-        #name_label.pack()
         self.soldier_name = tk.StringVar()
         self.name_entry = ttk.Entry(self.personal_data, width=20, textvariable=self.soldier_name)
         self.name_entry.grid(column=0, row=1, padx=self.con_padx, pady=self.con_pady)
 
         self.age_label = ttk.Label(self.personal_data, text="Age") # age label
         self.age_label.grid(column=1, row=0, padx=self.con_padx, pady=self.con_pady)
-        #age_label.pack() - don't use pack() if using widget.grid()
+        #age_label.pack() - don't use pack() if using widget.grid(), and we use .grid() because better
         self.soldier_age = tk.IntVar()
         self.age_entry = ttk.Entry(self.personal_data, width=3, textvariable=self.soldier_age)
         self.age_reg = (controller.register(validate_numbers), '%d', '%i', '%P', 17, 99)
@@ -346,9 +331,7 @@ class EnterStats(tk.Frame):
         self.sdc_label.grid(column=0, row=2, padx=self.con_padx, pady=self.con_pady, sticky="nsew")
         self.soldier_sdc_timeval = tk.StringVar()
         self.sdc_spinbox = ttk.Spinbox(self.acft_outputs, textvariable=self.soldier_sdc_timeval, width=5)
-        self.sdc_spinbox['values'] = get_time_list(3)
-            # spinbox registry
-        # sdc_reg = (controller.register(find_nearest_value), '%V', sdc_spinbox['values'], '%P', sdc_spinbox)
+        self.sdc_spinbox['values'] = get_time_list(3) # get the spinlist for up to 3 minutes, current practice is to set spinboxes to fail time for sdc
         self.sdc_spinbox.config(validate='all', validatecommand=create_validation_command(self.sdc_spinbox))
         self.sdc_spinbox.bind("<Return>", lambda e: find_nearest_value("Return", self.sdc_spinbox))
         self.sdc_spinbox.grid(column=0, row=3, padx=self.con_padx, pady=self.con_pady, sticky="nsew")
@@ -358,7 +341,7 @@ class EnterStats(tk.Frame):
         self.plank_label.grid(column=1, row=2, padx=self.con_padx, pady=self.con_pady, sticky="nsew")
         self.soldier_plank_timeval = tk.StringVar()
         self.plank_spinbox = ttk.Spinbox(self.acft_outputs, textvariable=self.soldier_plank_timeval, width=5)
-        self.plank_spinbox['values'] = get_time_list(4)
+        self.plank_spinbox['values'] = get_time_list(4) # max for all ages
         self.plank_spinbox.config(validate='all', validatecommand=create_validation_command(self.plank_spinbox))
         self.plank_spinbox.bind("<Return>", lambda e: find_nearest_value("Return", self.plank_spinbox))
         self.plank_spinbox.grid(column=1, row=3, padx=self.con_padx, pady=self.con_pady, sticky="nsew")
@@ -368,7 +351,7 @@ class EnterStats(tk.Frame):
         self.run_label.grid(column=2, row=2, padx=self.con_padx, pady=self.con_pady)
         self.soldier_run_timeval = tk.StringVar()
         self.run_spinbox = ttk.Spinbox(self.acft_outputs, textvariable=self.soldier_run_timeval, width=5)
-        self.run_spinbox['values'] = get_time_list(25)
+        self.run_spinbox['values'] = get_time_list(25) # highest fail time rounded up
         self.run_spinbox.config(validate='all', validatecommand=create_validation_command(self.run_spinbox))
         self.run_spinbox.bind("<Return>", lambda e: find_nearest_value("Return", self.run_spinbox))
         self.run_spinbox.grid(column=2, row=3, padx=self.con_padx, pady=self.con_pady, sticky="nsew")
@@ -390,7 +373,7 @@ class EnterStats(tk.Frame):
                 messagebox.showerror(title="Invalid Inputs", detail="Recheck your inputs and try again.")
                 return
 
-            #print(soldier_profile)
+            #print(soldier_profile) # print if you wanna see stuff
             csb = acftcalc.create_soldier_profile(soldier_profile, controller.dbmgr)
             if csb.name != "Default Name":
                 if csb.flagged:
@@ -398,7 +381,7 @@ class EnterStats(tk.Frame):
                     detail_message = ""
                     for i in range(len(csb.flags)):
                         detail_message = f"{detail_message}    - {csb.flags[i]}\n"
-                    messagebox.showerror(title="Invalid Inputs", message=f"{error_message}", detail=f"{detail_message}")
+                    messagebox.showerror(title="Invalid Inputs", message=f"{error_message}", detail=f"{detail_message}") # add loop, or leave as is to edit?
                 
                 #acftcalc.calculate_scores(csb, controller.dbmgr)
                 controller.objmgr.add_soldier(csb, soldier_profile[0])
@@ -427,7 +410,7 @@ class ViewStats(tk.Frame):
         self.label = tk.Label(self, text="Soldier Statistics")
         self.label.grid(column=0, row=0, padx=10, pady=0)
 
-        # window has its own soldier roster - is that a fine thing to do?
+        # app has its own soldier roster, to be exported as need be
         #self.objmgr = objmgr.Roster()
 
         # big stat frame
@@ -443,7 +426,7 @@ class ViewStats(tk.Frame):
         self.soldier_list_label = ttk.Label(self.stat_frame, text="Soldiers")
         self.soldier_list_label.grid(column=0, row=0)
 
-        # NEED OBJECT MANAGER
+        # SESSION-SPECIFIC OBJECT MANAGER
         self.soldier_list = controller.objmgr.soldier_list()
         self.soldier_list_var = tk.StringVar(value=self.soldier_list)
         self.soldier_listbox = tk.Listbox(self.stat_frame, height=20, width=18, listvariable=self.soldier_list_var)
@@ -462,16 +445,6 @@ class ViewStats(tk.Frame):
 
         # Set event bindings for when the selection in the listbox changes
         self.soldier_listbox.bind('<<ListboxSelect>>', get_name)
-
-        '''def save_soldiers():
-            SaveRoster(controller.objmgr.soldier_dict)
-        
-        self.save_entered_soldiers = ttk.Button(
-            self.stat_frame,
-            text="Save to File",
-            command=lambda: save_soldiers()
-        )
-        self.save_entered_soldiers.grid(column=0, row=2)'''
 
         def init_editer(*args):
             if len(self.soldier_listbox.curselection()) > 0:
@@ -510,7 +483,7 @@ class ViewStats(tk.Frame):
             self.soldier_listbox.selection_clear(0, "end")
             self.soldier_listbox.selection_set(self.soldier_list.index(frame.data.name))
 
-    def show_frame(self, args = None):
+    def show_frame(self, args = None): # swap the active soldier being shown, each soldier has its own subframe (IndiSoldierFrame) under the others
         if args:
             #print(self.frames)
             frame = self.frames[args]
@@ -520,7 +493,7 @@ class ViewStats(tk.Frame):
         #print(frame)
         frame.tkraise()
 
-class IndiSoldierFrame(ttk.Frame):
+class IndiSoldierFrame(ttk.Frame): # frame for each individual soldier to display under show stats frame
         def __init__(self, parent, controller, csb):
             ttk.Frame.__init__(self, parent)
             self.borderwidth = 0
@@ -534,7 +507,7 @@ class IndiSoldierFrame(ttk.Frame):
             self.text = RichText(self, width=20, height=20)
             self.text.grid(column=0, row=0, sticky="NSEW")
 
-            # NEED OBJECT MANAGER
+            # display statistics in the frame (object manager better?)
             self.flagmarker = "(!) "
             print(self.data.flags)
             self.text.insert("end", f"{self.flagmarker if self.data.flagged == True else ''}{self.data.name}\n")
@@ -568,7 +541,7 @@ class IndiSoldierFrame(ttk.Frame):
 
             self.text.configure(state="disabled")
 
-class EditSoldier(tk.Tk):
+class EditSoldier(tk.Tk): # window to edit the soldier if needed
     def __init__(self, csb, objmgr, controller, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.soldier = csb
@@ -587,7 +560,6 @@ class EditSoldier(tk.Tk):
 
         self.container = tk.Frame(self, padx=5, pady=10) # frame and container
         self.container.grid(column=0, row=0, sticky="NSEW")
-        #container.pack(side="top", fill=tk.BOTH, expand=True) # place frame in root window
         
         self.container.grid_rowconfigure(0, weight=1) # location of container with grid manager
         self.container.grid_columnconfigure(0, weight=1)

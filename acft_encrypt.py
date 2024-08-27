@@ -32,7 +32,7 @@ def get_hash_n_salt(given_password, roster_db):
 
     hashed_pw = ph.hash(given_password, salt=salt)
     roster_db.insert_hashnsalt(hashed_pw, salt)
-    # then encrypt?
+    # then encrypt? or wait
     # encrypt_data(roster_db)
 
 def encrypt_data(roster_db):
@@ -98,10 +98,10 @@ def decrypt_data(roster_db, given_password):
 
         roster_db.query("DROP TABLE IF EXISTS encrypted_roster")
 
-def get_fernet_suite(given_hash):
+def get_fernet_suite(given_hash): # maka da key
     fernet_key = base64.urlsafe_b64encode((given_hash[30:62]).encode())
     return Fernet(fernet_key)
 
-def remove_encryption_info(roster_db):
+def remove_encryption_info(roster_db): # delete existing encryption and remake the table for use later if need be
     roster_db.query("DROP TABLE IF EXISTS encryption")
     roster_db.query("CREATE TABLE IF NOT EXISTS encryption(encrypted INTEGER, hash TEXT, salt BLOB)")

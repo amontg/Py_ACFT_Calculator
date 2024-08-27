@@ -6,7 +6,7 @@ Date: 20230604
 Objective: Import CSVs files with ACFT scores and calculate the individual scores and overall score based on sex and age
 
 '''
-import acftdatabase, math, filereader
+import acftdatabase, math
 
 class FlagCatcher:
     def __init__(self):
@@ -50,7 +50,7 @@ class IndividualSoldier:
         struct = [self.name, self.age, self.sex, f"{self.deadlift_output} ({self.deadlift_points})", f"{self.powerthrow_output} ({self.powerthrow_points})", f"{self.releasePU_output}, ({self.releasePU_points})", f"{self.sdc_output} ({self.sdc_points})", f"{self.plank_output} ({self.plank_points})", f"{self.run_output} ({self.run_points})"]
         return struct
 
-    def print_soldier(self):
+    def print_soldier(self): # useful for printing to console for debugging
         print(f"""{self.name} | Sex: {self.sex} | Age: {self.age}
         Deadlift ({self.deadlift_output}): {self.deadlift_points}
         Powerthrow ({self.powerthrow_output}): {self.powerthrow_points}
@@ -60,7 +60,7 @@ class IndividualSoldier:
         Run ({self.run_output}): {self.run_points}
         Total: {self.total_points}""")
 
-class HighsLows:
+class HighsLows: # get the max and fail for each event for given age
     def __init__(self, age, sex):
         self.db = acftdatabase.init_database_connection()
         self.exercises = ["deadlift", "powerthrow", "releasePU", "sdc", "plank", "run"]
@@ -98,11 +98,11 @@ def get_database():
     dbmgr = acftdatabase.init_database_connection()
     return dbmgr
 
-def time_to_float(input): # input as a string "00:00"
+def time_to_float(input): # input as a string "00:00", for mathing
     input = input.replace(":", ".")
     return float(input)
 
-def float_to_time(input):
+def float_to_time(input): # reverse for displaying
     input = str(input)
     input = input.replace(".", ":")
     min, sec = input.split(":")
@@ -116,11 +116,12 @@ def float_to_time(input):
 
 def calculate_scores(csb, dbmgr):
     # events = ["deadlift", "powerthrow", "releasePU", "sdc", "plank", "run"]
-    # SELECT score FROM exercise_point_table WHERE age = csb.bracket AND sex = X AND output = X
+    # SELECT score FROM exercise_point_table WHERE age = csb.bracket AND sex = X AND output = X LIMIT 1
+        # get the score from the given exercise table where bracket makes given age, sex matches, and output is <= given soldier output (<= cuz get the next highest)
     # exercise_point_table(age, sex, output, score)
 
     # deadlift
-    score_string = f"SELECT score FROM deadlift_point_table WHERE age = {csb.bracket} AND sex = '{csb.sex}' AND output <= {csb.deadlift_output}"
+    score_string = f"SELECT score FROM deadlift_point_table WHERE age = {csb.bracket} AND sex = '{csb.sex}' AND output <= {csb.deadlift_output} LIMIT 1"
     score = (dbmgr.query(score_string)).fetchone()
     deadlift_score = 0 if score == "None" or score == None else (score)[0]
     #print(deadlift_score[0])
@@ -179,8 +180,8 @@ def catch_bad_input(input, cast, flagcatcher): # IE catch_bad_input(raw[0], 1)
             maybe_flag = "Bad Time (Check SDC, Plank, 2mi. Run Entries)"
             if type(input) == str:
                 input = time_to_float(input)
-        else: # Sanitizing strings? No = ; INSERT DROP
-            if '=' in input or ';' in input or 'INSERT' in input or 'DROP' in input:
+        else: # Sanitizing strings? No = ; INSERT DROP UNION
+            if '=' in input or ';' in input or 'INSERT' in input or 'DROP' in input or 'UNION' in input:
                 maybe_flag = "Bad String (Check Name)"
                 input = ""
     except:
@@ -249,9 +250,9 @@ def create_soldier_profile(raw, dbmgr): # raw = ['Name', 'Age', 'Sex', 'Deadlift
     
     return csb
 
-# the following main function is for testing out the calculator and database, not meant to be used to initiate the program.
+# the following testMe function is for testing out the calculator and database, not meant to be used to initiate the program.
 ## INITIATE THE PROGRAM FROM acftcalc_gui.py ##
-def main():
+def testMe():
     dbmgr = get_database()
     Amir_profile = ["Amir", "23", "Male", 340, "-- or 1=1", 41, "1:25", "-- or 1=1", "14:05"] # ['Name', 'Age', 'Sex', 'Deadlift', 'Powerthrow', 'ReleasePU', 'SDC', 'Plank', 'Run']
     csb = create_soldier_profile(Amir_profile, dbmgr)
@@ -273,4 +274,4 @@ def main():
     
     acftdatabase.close_database_connection(dbmgr)
 
-#main()
+#testMe()
