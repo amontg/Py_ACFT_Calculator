@@ -7,6 +7,7 @@ Objective: Handle a Tkinter GUI
 
 '''
 
+from time import sleep
 import tkinter as tk # module
 import os
 from tkinter import ttk # styling
@@ -20,6 +21,7 @@ import acftcalculator as acftcalc # calculate stuff
 import acft_objmgr as objmgr # manage the thingies
 import acft_encrypt as acftcrypt # do database encryption
 import rosterdatabase
+import client_phandler as handler
 
 # RichText provided by Bryan Oakley: https://stackoverflow.com/questions/63099026/fomatted-text-in-tkinter
 class RichText(tk.Text): 
@@ -86,7 +88,7 @@ class windows(tk.Tk):
             # else do nothing
 
         # save database
-        def save_roster(close=False):
+        def save_roster(close=False): # save the file, if retfile=True return the saved filename
             if len(self.objmgr.soldier_list()) > 0: # if i have soldiers in my database, go thru saving procedure
 
                 # ask for filename to save file as, make a loop until they save into file name or deny saving
@@ -116,6 +118,9 @@ class windows(tk.Tk):
                             break
                         else:
                             continue # restart loop with wannasave either true or false based on the yesno box
+            else:
+                messagebox.showinfo(title=None, message="You have no soldiers to save.")
+                return None
 
             if close == False:
                 close = messagebox.askyesno(title="Information", message="Close Application", detail="You saved your database. Do you want to close the application?")
@@ -137,6 +142,13 @@ class windows(tk.Tk):
 
                 rosterdatabase.close_database_connection(roster_db)
                 self.destroy()
+
+        def send_roster():
+            socket = handler.connect_to_server()
+            file = b"testdb.db"
+
+            handler.send_to_server(file, socket)
+            handler.disconnect_server(socket)
         
         def encrypt_loaded():
             for i in self.oldsave_file:
@@ -200,9 +212,13 @@ class windows(tk.Tk):
         menu_options = tk.Menu(self.menu_bar)
         self.menu_bar.add_cascade(menu=menu_options, label="Options") # Options cascade in menu bar
 
-        #clear_roster = tk.Menu(menu_options)
         menu_options.add_command(label="Clear Entries", command=lambda: clear_table())
-        menu_options.add_command(label="Save", command=lambda: save_roster())
+        # menu_options.add_command(label="Save", command=lambda: save_roster())
+        
+        menu_save = tk.Menu(menu_options)
+        menu_options.add_cascade(menu=menu_save, label="Save")
+        menu_save.add_command(label="... locally", command=lambda: save_roster())
+        menu_save.add_command(label="... to server", command=lambda: send_roster())
 
         menu_open = tk.Menu(menu_options)
         menu_options.add_cascade(menu=menu_open, label="Open") # Open options cascade in option cascade
