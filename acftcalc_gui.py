@@ -513,7 +513,7 @@ class EnterStats(tk.Frame):
 
             #print(soldier_profile) # print if you wanna see stuff
             csb = acftcalc.create_soldier_profile(soldier_profile, controller.dbmgr)
-            if csb.name != "Default Name":
+            if csb.name != 0:
                 if csb.flagged:
                     error_message = "Your input had errors."
                     detail_message = ""
@@ -522,7 +522,7 @@ class EnterStats(tk.Frame):
                     messagebox.showerror(title="Invalid Inputs", message=f"{error_message}", detail=f"{detail_message}") # add loop, or leave as is to edit?
                 
                 #acftcalc.calculate_scores(csb, controller.dbmgr)
-                controller.objmgr.add_soldier(csb, soldier_profile[0])
+                controller.objmgr.add_soldier(csb, csb.name)
 
                 #controller.die_stats()
                 controller.show_stats()
@@ -647,7 +647,7 @@ class IndiSoldierFrame(ttk.Frame): # frame for each individual soldier to displa
 
             # display statistics in the frame (object manager better?)
             self.flagmarker = "(!) "
-            print(self.data.flags)
+            #print(self.data.flags)
             self.text.insert("end", f"{self.flagmarker if self.data.flagged == True else ''}{self.data.name}\n")
             self.text.insert("end", f"{self.data.age}, {self.data.sex}\n\n")
 

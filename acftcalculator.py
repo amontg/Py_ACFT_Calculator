@@ -182,9 +182,9 @@ def catch_bad_input(input, cast, flagcatcher): # IE catch_bad_input(raw[0], 1)
             if type(input) == str:
                 return time_to_float(input)
         else: # Sanitizing strings. No = ; INSERT DROP UNION
-            if '=' in input or ';' in input or 'INSERT' in input or 'DROP' in input or 'UNION' in input:
+            if '=' in input or ';' in input or 'INSERT' in input or 'DROP' in input or 'UNION' in input or '\'' in input:
                 maybe_flag = "Bad String (Check Name)"
-                return "Invalid Input"
+                raise Exception
             else:
                 return input
     except:
