@@ -7,6 +7,7 @@ Objective: Handle a Tkinter GUI
 
 '''
 
+import shutil
 from time import sleep
 import tkinter as tk # module
 import os
@@ -15,6 +16,7 @@ from tkinter import font as tkFont
 from tkinter import messagebox # popups
 from tkinter import filedialog # file handling
 from tkinter import simpledialog
+import tempfile
 
 import argon2
 import acftcalculator as acftcalc # calculate stuff
@@ -65,6 +67,7 @@ class windows(tk.Tk):
 
         self.objmgr = objmgr.Roster()
         self.given_password = ""
+        self.server_savename = ""
         self.oldsave_file = []
 
         self.frames = {} # frame dictionary
@@ -88,9 +91,10 @@ class windows(tk.Tk):
             # else do nothing
 
         # save database
-        def save_roster(close=False): # save the file, if retfile=True return the saved filename
+        def save_roster(close=False, serversend=False): # save the file, if retfile=True return the saved filename
             if len(self.objmgr.soldier_list()) > 0: # if i have soldiers in my database, go thru saving procedure
-
+                newsave_file = ""
+                
                 # ask for filename to save file as, make a loop until they save into file name or deny saving
                 wannasave = True
                 while (wannasave == True): # if wannasave remains true, loop back
@@ -102,7 +106,7 @@ class windows(tk.Tk):
                             roster_db = rosterdatabase.init_database_connection(newsave_file)
 
                             rosterdatabase.csb_to_db(self.objmgr, roster_db)
-
+                            
                             break # saving is done, exit loop
                         except:
                             messagebox.showerror(title="Error", message="Invalid Database", detail="There was something wrong with saving your database.\nPlease check your entries and try again..")
@@ -121,34 +125,87 @@ class windows(tk.Tk):
             else:
                 messagebox.showinfo(title=None, message="You have no soldiers to save.")
                 return None
+            
+            encrypt_choice = messagebox.askyesno(title=None, message="Do you wish to encrypt this file?")
+            if encrypt_choice:
+                if acftcrypt.check_encrypt(roster_db) == 1:
+                    acftcrypt.encrypt_data(roster_db)
+                else:
+                    password_window = PasswordBox(True, self)
+                    password_window.wait_window()
+                                
+                    acftcrypt.get_hash_n_salt(self.given_password, roster_db)
+                    acftcrypt.encrypt_data(roster_db)
+            else: # double check to make sure the file doesn't already have an encryption set up. Delete if so
+                if acftcrypt.check_encrypt(roster_db) == 1:
+                    acftcrypt.remove_encryption_info(roster_db)
 
-            if close == False:
+            if serversend == True:
+                return newsave_file
+
+            if close == False and serversend == False:
                 close = messagebox.askyesno(title="Information", message="Close Application", detail="You saved your database. Do you want to close the application?")
             
-            if close == True: # only close if wanted to close
-                encrypt_choice = messagebox.askyesno(title=None, message="Do you wish to encrypt this file?")
-                if encrypt_choice == True:
-                    if acftcrypt.check_encrypt(roster_db) == 1:
-                        acftcrypt.encrypt_data(roster_db)
-                    else:
-                        password_window = PasswordBox(True, self)
-                        password_window.wait_window()
-                                    
-                        acftcrypt.get_hash_n_salt(self.given_password, roster_db)
-                        acftcrypt.encrypt_data(roster_db)
-                else: # double check to make sure the file doesn't already have an encryption set up. Delete if so
-                    if acftcrypt.check_encrypt(roster_db) == 1:
-                        acftcrypt.remove_encryption_info(roster_db)
-
+            if close: # only close if wanted to close
                 rosterdatabase.close_database_connection(roster_db)
                 self.destroy()
 
         def send_roster():
-            socket = handler.connect_to_server()
-            file = b"testdb.db"
+            '''
+            ask if also save local
+            if yes
+                save local
+                send to server with local name
+            if no
+                make temp file
+                ask encrypt
+                send to server with (ask name)
+            '''
+            if len(self.objmgr.soldier_list()) > 0:
+                socket = handler.connect_to_server()
+                filename_window = SavenameDialog(self)      # ask for name
+                filename_window.wait_window()               # wait til name
 
-            handler.send_to_server(file, socket)
-            handler.disconnect_server(socket)
+                save_local = messagebox.askyesno(title=None, message="Do you also want to save this file locally?")
+
+                if save_local == True:
+                    close = messagebox.askyesno(title=None, message="Do you want to close after saving?")
+
+                    file = save_roster(close, True)
+                    if file == None:
+                        handler.disconnect_server(socket)
+                        return None
+
+                    handler.send_to_server(str.encode(file), socket, str.encode(self.server_savename))
+
+                else:
+                    temp_dir = tempfile.TemporaryDirectory()
+                    file = temp_dir.name + "\\tmp_db.db"
+                    print(file)
+
+                    roster_db = rosterdatabase.init_database_connection(file)  # make it a db
+                    rosterdatabase.csb_to_db(self.objmgr, roster_db)           # enter data to db
+
+                    encrypt_choice = messagebox.askyesno(title=None, message="Do you wish to encrypt this file?")
+                    if encrypt_choice == True:
+                        password_window = PasswordBox(True, self)
+                        password_window.wait_window()
+                                    
+                        acftcrypt.get_hash_n_salt(self.given_password, roster_db)
+                        acftcrypt.encrypt_data(roster_db)   # encrypt the data before send
+
+                    handler.send_to_server(str.encode(file), socket, str.encode(self.server_savename)) # send the file
+                    rosterdatabase.close_database_connection(roster_db)             # close the database
+                    shutil.rmtree(temp_dir.name, ignore_errors=True)                                    # delete the temp_dir
+
+                handler.disconnect_server(socket)
+            else:
+                messagebox.showinfo(title=None, message="You have no soldiers to save.")
+                return None
+
+            close = messagebox.askyesno(title=None, message="Do you wish to close the program?")
+            if close == True:
+                self.destroy()
         
         def encrypt_loaded():
             for i in self.oldsave_file:
@@ -242,6 +299,41 @@ class windows(tk.Tk):
         self.frames[ViewStats] = self.viewstats_frame
         frame = self.frames[ViewStats]
         frame.grid(column=0, row=3, sticky="NSEW")
+
+class SavenameDialog(tk.Toplevel):
+    def __init__(self, passback, *args, **kwargs):
+        tk.Toplevel.__init__(self, *args, **kwargs)
+        self.wm_title("Filename")
+
+        self.minsize(0, 0)
+        self.resizable(0, 0)
+        self.con_pady=5
+        self.con_padx=5
+        self.entry_width=15
+
+        self.container = tk.Frame(self, padx=5, pady=10) # frame and container, top left
+        self.container.grid(column=0, row=0, sticky="NSEW")
+        
+        self.container.grid_rowconfigure(0, weight=1) # location of container with grid manager
+        self.container.grid_columnconfigure(0, weight=1)
+
+        self.entry1_label = ttk.Label(self.container, text="Enter Filename: ")
+        self.entry1_label.grid(column=0, row=0, sticky="NSEW", padx=self.con_padx, pady=self.con_pady)
+        self.entry1_entry = ttk.Entry(self.container, width=self.entry_width)
+        self.entry1_entry.grid(column=1, row=0, sticky="NSEW", padx=self.con_padx, pady=self.con_pady)
+
+        def process_name(): # send name back to parent frame
+            given_name = self.entry1_entry.get()
+            passback.server_savename = given_name
+            self.destroy()
+            
+        self.enter_button = ttk.Button(
+            self.container,
+            text="Enter",
+            command=lambda: process_name()
+        )
+        self.enter_button.grid(column=0, row=3, columnspan=2, padx=self.con_padx, pady=self.con_pady)
+
 
 class PasswordBox(tk.Toplevel):
     def __init__(self, new, passback, *args, **kwargs): # init PassBox (self[none], new[T/F], passback[frame that wants the information])

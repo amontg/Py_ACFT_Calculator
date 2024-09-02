@@ -44,7 +44,7 @@ def encrypt_data(roster_db):
     cipher_suite = get_fernet_suite(stored_hash)
 
     # create an encrypted data table
-    roster_db.query("CREATE TABLE encrypted_roster(name BLOB, age BLOB, sex BLOB, total BLOB, deadlift_out BLOB, deadlift_points BLOB, powerthrow_out BLOB, powerthrow_points BLOB, releasePU_out BLOB, pushup_points BLOB, sdc_out BLOB, sdc_points BLOB, plank_out BLOB, plank_points BLOB, run_out BLOB, run_points BLOB)")
+    roster_db.query("CREATE TABLE IF NOT EXISTS encrypted_roster(name BLOB, age BLOB, sex BLOB, total BLOB, deadlift_out BLOB, deadlift_points BLOB, powerthrow_out BLOB, powerthrow_points BLOB, releasePU_out BLOB, pushup_points BLOB, sdc_out BLOB, sdc_points BLOB, plank_out BLOB, plank_points BLOB, run_out BLOB, run_points BLOB)")
 
     get_records_line = "SELECT * FROM roster"
     for row in roster_db.query(get_records_line):

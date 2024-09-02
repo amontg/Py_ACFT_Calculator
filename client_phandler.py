@@ -13,11 +13,11 @@ def connect_to_server(): # create and return the socket
     client.init_connect.restype = c_int
     return client.init_connect()
 
-def send_to_server(filename: str, socket: int):
+def send_to_server(filename: str, socket: int, savename: str):
     #f = open(filename, "r")
     #client.send_file(filename, socket)
-    client.send_file.argtypes = c_char_p, c_int
-    client.send_file(filename, socket)
+    client.send_file.argtypes = c_char_p, c_int, c_char_p
+    client.send_file(filename, socket, savename)
     #f.close()
 
 def disconnect_server(socket):
