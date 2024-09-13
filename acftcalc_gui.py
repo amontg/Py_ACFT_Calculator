@@ -209,10 +209,10 @@ class windows(tk.Tk):
         
         def encrypt_loaded():
             for i in self.oldsave_file:
-                roster_db = rosterdatabase.init_database_connection(i)
+                save_roster_db = rosterdatabase.init_database_connection(i)
                                     
-                if acftcrypt.check_encrypt(roster_db) == 1:
-                    acftcrypt.encrypt_data(roster_db)
+                if acftcrypt.check_encrypt(save_roster_db) == 1:
+                    acftcrypt.encrypt_data(save_roster_db)
 
         # open database
         def open_roster(decision):
